@@ -51,9 +51,8 @@ open iSpend.xcodeproj
 打开仓库的 **Actions → Build unsigned IPA → Run workflow**。工作流会：
 
 1. 在 GitHub 托管的 macOS runner 上生成 Xcode 工程；
-2. 编译 App 与单元测试目标；
-3. 以 `CODE_SIGNING_ALLOWED=NO` 构建真机 Release App；
-4. 打包并上传 `iSpend-unsigned-ipa` Artifact。
+2. 以 `CODE_SIGNING_ALLOWED=NO` 构建真机 Release App；
+3. 打包并上传 `iSpend-unsigned-ipa` Artifact。
 
 未签名 IPA 不能直接安装到普通 iPhone，需要使用你自己的证书重新签名。它适合后续签名、侧载工具处理或产物检查。
 
