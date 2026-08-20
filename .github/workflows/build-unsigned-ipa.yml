@@ -10,10 +10,9 @@ jobs:
       - uses: actions/checkout@v4
       - name: Install XcodeGen
         run: |
-          git clone --depth 1 --branch 2.46.0 https://github.com/yonaskolb/XcodeGen.git "$RUNNER_TEMP/XcodeGen"
-          cd "$RUNNER_TEMP/XcodeGen"
-          swift build -c release --product xcodegen
-          sudo install -m 0755 .build/release/xcodegen /usr/local/bin/xcodegen
+          export HOMEBREW_NO_AUTO_UPDATE=1
+          export HOMEBREW_NO_REQUIRE_TAP_TRUST=1
+          brew install --formula xcodegen
           xcodegen version
       - name: Generate Xcode project
         run: xcodegen generate
