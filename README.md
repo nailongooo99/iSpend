@@ -9,7 +9,7 @@
 
 ## Build an unsigned IPA on GitHub
 
-Push this repository to GitHub and run **Actions → Build unsigned IPA**. The workflow uses a hosted macOS runner, builds an iOS Release archive without a signing identity, creates an unsigned `.app`, packages it as an `.ipa`, and uploads it as an artifact. An unsigned IPA cannot be installed directly on a normal iPhone; it is intended for later signing or inspection.
+Run **Actions → Build unsigned IPA**. The workflow uses a hosted macOS runner, builds an iOS Release archive without a signing identity, packages the app as an unsigned `.ipa`, and uploads it as an artifact. An unsigned IPA cannot be installed directly on a normal iPhone; it is intended for later signing or inspection.
 
 ## Scope
 
