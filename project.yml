@@ -1,0 +1,23 @@
+name: iSpend
+options:
+  bundleIdPrefix: com.ispend
+  deploymentTarget:
+    iOS: "18.0"
+settings:
+  base:
+    SWIFT_VERSION: 6.0
+    DEVELOPMENT_TEAM: ""
+    CODE_SIGNING_ALLOWED: NO
+    CODE_SIGNING_REQUIRED: NO
+targets:
+  iSpend:
+    type: application
+    platform: iOS
+    sources: iSpend
+    settings:
+      PRODUCT_BUNDLE_IDENTIFIER: com.ispend.app
+      INFOPLIST_KEY_CFBundleDisplayName: iSpend
+      INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents: YES
+      INFOPLIST_KEY_LSApplicationCategoryType: public.app-category.finance
+      INFOPLIST_KEY_NSCameraUsageDescription: "iSpend uses photos only when you attach a receipt."
+      INFOPLIST_KEY_NSPhotoLibraryUsageDescription: "iSpend uses photos only when you attach a receipt."

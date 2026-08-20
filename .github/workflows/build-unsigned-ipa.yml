@@ -1,0 +1,29 @@
+name: Build unsigned IPA
+on:
+  workflow_dispatch:
+  push:
+    branches: [ main ]
+jobs:
+  build:
+    runs-on: macos-14
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install XcodeGen
+        run: brew install xcodegen
+      - name: Generate Xcode project
+        run: xcodegen generate
+      - name: Build unsigned archive
+        run: |
+          xcodebuild archive -project iSpend.xcodeproj -scheme iSpend \
+            -configuration Release -sdk iphoneos \
+            -archivePath "$RUNNER_TEMP/iSpend.xcarchive" \
+            CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO CODE_SIGN_IDENTITY=""
+      - name: Package unsigned IPA
+        run: |
+          mkdir -p "$RUNNER_TEMP/Payload"
+          cp -R "$RUNNER_TEMP/iSpend.xcarchive/Products/Applications/iSpend.app" "$RUNNER_TEMP/Payload/"
+          /usr/bin/ditto -c -k --sequesterRsrc --keepParent "$RUNNER_TEMP/Payload" iSpend-unsigned.ipa
+      - uses: actions/upload-artifact@v4
+        with:
+          name: iSpend-unsigned-ipa
+          path: iSpend-unsigned.ipa
