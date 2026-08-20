@@ -10,15 +10,8 @@ jobs:
       - uses: actions/checkout@v4
       - name: Install XcodeGen
         run: |
-          curl -L --fail --retry 3 https://github.com/yonaskolb/XcodeGen/releases/download/2.46.0/xcodegen.artifactbundle.zip -o "$RUNNER_TEMP/xcodegen.zip"
-          unzip -q "$RUNNER_TEMP/xcodegen.zip" -d "$RUNNER_TEMP/xcodegen"
-          XCODEGEN_BIN=$(find "$RUNNER_TEMP/xcodegen" -type f -name xcodegen | head -n 1)
-          test -n "$XCODEGEN_BIN"
-          chmod +x "$XCODEGEN_BIN"
-          XCODEGEN_DIR="$(dirname "$XCODEGEN_BIN")"
-          echo "$XCODEGEN_DIR" >> "$GITHUB_PATH"
-          export PATH="$XCODEGEN_DIR:$PATH"
-          xcodegen version
+          git clone --depth 1 --branch 2.46.0 https://github.com/yonaskolb/XcodeGen.git "$RUNNER_TEMP/XcodeGen"
+          swift run --package-path "$RUNNER_TEMP/XcodeGen" -c release xcodegen generate --spec "$GITHUB_WORKSPACE/project.yml"
           xcodegen version
       - name: Generate Xcode project
         run: xcodegen generate
