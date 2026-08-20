@@ -4,9 +4,10 @@ on:
   workflow_dispatch:
   push:
     branches: [main]
+    tags: ["v*"]
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
   build:
@@ -45,3 +46,13 @@ jobs:
           path: iSpend-unsigned.ipa
           if-no-files-found: error
           retention-days: 30
+      - name: Publish GitHub Release
+        if: startsWith(github.ref, 'refs/tags/v')
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create "$GITHUB_REF_NAME" \
+            iSpend-unsigned.ipa#iSpend-v1.0.0-unsigned.ipa \
+            --title "iSpend 1.0.0" \
+            --notes "iSpend 1.0.0 首个正式发行版。使用 Swift 6、SwiftUI 与 SwiftData 构建。此附件为未签名 IPA，安装前必须使用你自己的 Apple 开发证书重新签名。" \
+            --verify-tag
