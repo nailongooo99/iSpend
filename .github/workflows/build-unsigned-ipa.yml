@@ -10,11 +10,11 @@ jobs:
       - uses: actions/checkout@v4
       - name: Install XcodeGen
         run: |
-          export HOMEBREW_NO_AUTO_UPDATE=1
-          export HOMEBREW_NO_INSTALL_FROM_API=1
-          export HOMEBREW_NO_REQUIRE_TAP_TRUST=1
-          brew untap aws/tap 2>/dev/null || true
-          brew install --formula --force-bottle xcodegen
+          curl -L --fail --retry 3 https://github.com/yonaskolb/XcodeGen/releases/download/2.46.0/xcodegen.artifactbundle.zip -o "$RUNNER_TEMP/xcodegen.zip"
+          unzip -q "$RUNNER_TEMP/xcodegen.zip" -d "$RUNNER_TEMP/xcodegen"
+          XCODEGEN_BIN=$(find "$RUNNER_TEMP/xcodegen" -type f -name xcodegen | head -n 1)
+          test -n "$XCODEGEN_BIN"
+          sudo install -m 0755 "$XCODEGEN_BIN" /usr/local/bin/xcodegen
           xcodegen version
       - name: Generate Xcode project
         run: xcodegen generate
