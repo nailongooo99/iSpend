@@ -1,4 +1,4 @@
-import SwiftData
+@preconcurrency import SwiftData
 
 enum iSpendSchemaV1: VersionedSchema {
     static let versionIdentifier = Schema.Version(1, 0, 0)
