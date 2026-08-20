@@ -1,32 +1,54 @@
 name: Build unsigned IPA
+
 on:
   workflow_dispatch:
   push:
-    branches: [ main ]
+    branches: [main]
+
+permissions:
+  contents: read
+
 jobs:
   build:
-    runs-on: macos-14
+    runs-on: macos-15
+    timeout-minutes: 30
     steps:
       - uses: actions/checkout@v4
+      - name: Select Xcode
+        run: sudo xcode-select -s /Applications/Xcode_16.4.app/Contents/Developer
       - name: Install XcodeGen
-        run: |
-          git clone --depth 1 --branch 2.46.0 https://github.com/yonaskolb/XcodeGen.git "$RUNNER_TEMP/XcodeGen"
-          swift run --package-path "$RUNNER_TEMP/XcodeGen" -c release xcodegen generate --spec "$GITHUB_WORKSPACE/project.yml"
-          xcodegen version
+        run: brew install xcodegen
       - name: Generate Xcode project
-        run: xcodegen generate
-      - name: Build unsigned archive
+        run: xcodegen generate --spec project.yml
+      - name: Run unit tests
         run: |
-          xcodebuild archive -project iSpend.xcodeproj -scheme iSpend \
-            -configuration Release -sdk iphoneos \
-            -archivePath "$RUNNER_TEMP/iSpend.xcarchive" \
-            CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO CODE_SIGN_IDENTITY=""
+          xcodebuild test \
+            -project iSpend.xcodeproj \
+            -scheme iSpend \
+            -destination 'platform=iOS Simulator,name=iPhone 16 Pro,OS=18.5' \
+            CODE_SIGNING_ALLOWED=NO
+      - name: Build unsigned app
+        run: |
+          xcodebuild build \
+            -project iSpend.xcodeproj \
+            -scheme iSpend \
+            -configuration Release \
+            -sdk iphoneos \
+            -derivedDataPath "$RUNNER_TEMP/DerivedData" \
+            CODE_SIGNING_ALLOWED=NO \
+            CODE_SIGNING_REQUIRED=NO \
+            CODE_SIGN_IDENTITY=""
       - name: Package unsigned IPA
         run: |
+          APP_PATH="$RUNNER_TEMP/DerivedData/Build/Products/Release-iphoneos/iSpend.app"
+          test -d "$APP_PATH"
           mkdir -p "$RUNNER_TEMP/Payload"
-          cp -R "$RUNNER_TEMP/iSpend.xcarchive/Products/Applications/iSpend.app" "$RUNNER_TEMP/Payload/"
-          /usr/bin/ditto -c -k --sequesterRsrc --keepParent "$RUNNER_TEMP/Payload" iSpend-unsigned.ipa
+          cp -R "$APP_PATH" "$RUNNER_TEMP/Payload/iSpend.app"
+          cd "$RUNNER_TEMP"
+          /usr/bin/zip -qry "$GITHUB_WORKSPACE/iSpend-unsigned.ipa" Payload
       - uses: actions/upload-artifact@v4
         with:
           name: iSpend-unsigned-ipa
           path: iSpend-unsigned.ipa
+          if-no-files-found: error
+          retention-days: 30

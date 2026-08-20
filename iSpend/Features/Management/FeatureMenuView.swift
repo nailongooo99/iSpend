@@ -1,0 +1,3 @@
+import SwiftUI
+
+struct FeatureMenuView: View { var body: some View { List { Section { NavigationLink("搜索", systemImage: "magnifyingglass", destination: TransactionSearchView()); NavigationLink("订阅与分期", systemImage: "repeat.circle", destination: RecurringHomeView()); NavigationLink("储蓄目标", systemImage: "target", destination: SavingsGoalsView()) }; Section("管理") { NavigationLink("账本管理", systemImage: "books.vertical", destination: LedgerManagementView()); NavigationLink("分类管理", systemImage: "square.grid.2x2", destination: CategoryManagementView()); NavigationLink("设置", systemImage: "gear", destination: SettingsView()) } }.navigationTitle("更多") } }
