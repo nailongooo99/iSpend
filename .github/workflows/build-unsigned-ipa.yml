@@ -9,7 +9,13 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Install XcodeGen
-        run: brew install xcodegen
+        run: |
+          curl -L --fail --retry 3 https://github.com/yonaskolb/XcodeGen/releases/latest/download/xcodegen.zip -o "$RUNNER_TEMP/xcodegen.zip"
+          unzip -q "$RUNNER_TEMP/xcodegen.zip" -d "$RUNNER_TEMP/xcodegen"
+          XCODEGEN_BIN=$(find "$RUNNER_TEMP/xcodegen" -type f -name xcodegen -perm -u+x | head -n 1)
+          test -n "$XCODEGEN_BIN"
+          sudo install -m 0755 "$XCODEGEN_BIN" /usr/local/bin/xcodegen
+          xcodegen version
       - name: Generate Xcode project
         run: xcodegen generate
       - name: Build unsigned archive
