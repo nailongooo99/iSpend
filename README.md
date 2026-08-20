@@ -51,7 +51,7 @@ open iSpend.xcodeproj
 打开仓库的 **Actions → Build unsigned IPA → Run workflow**。工作流会：
 
 1. 在 GitHub 托管的 macOS runner 上生成 Xcode 工程；
-2. 运行单元测试；
+2. 编译 App 与单元测试目标；
 3. 以 `CODE_SIGNING_ALLOWED=NO` 构建真机 Release App；
 4. 打包并上传 `iSpend-unsigned-ipa` Artifact。
 

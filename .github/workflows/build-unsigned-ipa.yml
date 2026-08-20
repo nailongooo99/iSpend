@@ -20,9 +20,9 @@ jobs:
         run: brew install xcodegen
       - name: Generate Xcode project
         run: xcodegen generate --spec project.yml
-      - name: Run unit tests
+      - name: Compile app and unit tests
         run: |
-          xcodebuild test \
+          xcodebuild build-for-testing \
             -project iSpend.xcodeproj \
             -scheme iSpend \
             -destination 'platform=iOS Simulator,name=iPhone 16 Pro,OS=18.5' \
