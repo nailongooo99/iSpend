@@ -18,6 +18,7 @@ targets:
     settings:
       PRODUCT_BUNDLE_IDENTIFIER: com.ispend.app
       GENERATE_INFOPLIST_FILE: YES
+      SWIFT_COMPILATION_MODE: incremental
       INFOPLIST_KEY_CFBundleDisplayName: iSpend
       INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents: YES
       INFOPLIST_KEY_LSApplicationCategoryType: public.app-category.finance
