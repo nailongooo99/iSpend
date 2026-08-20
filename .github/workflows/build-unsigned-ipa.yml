@@ -14,7 +14,8 @@ jobs:
           unzip -q "$RUNNER_TEMP/xcodegen.zip" -d "$RUNNER_TEMP/xcodegen"
           XCODEGEN_BIN=$(find "$RUNNER_TEMP/xcodegen" -type f -name xcodegen | head -n 1)
           test -n "$XCODEGEN_BIN"
-          sudo install -m 0755 "$XCODEGEN_BIN" /usr/local/bin/xcodegen
+          chmod +x "$XCODEGEN_BIN"
+          echo "$(dirname "$XCODEGEN_BIN")" >> "$GITHUB_PATH"
           xcodegen version
       - name: Generate Xcode project
         run: xcodegen generate
