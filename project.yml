@@ -17,6 +17,7 @@ targets:
     sources: iSpend
     settings:
       PRODUCT_BUNDLE_IDENTIFIER: com.ispend.app
+      GENERATE_INFOPLIST_FILE: YES
       INFOPLIST_KEY_CFBundleDisplayName: iSpend
       INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents: YES
       INFOPLIST_KEY_LSApplicationCategoryType: public.app-category.finance
@@ -31,3 +32,4 @@ targets:
       - target: iSpend
     settings:
       PRODUCT_BUNDLE_IDENTIFIER: com.ispend.tests
+      GENERATE_INFOPLIST_FILE: YES
