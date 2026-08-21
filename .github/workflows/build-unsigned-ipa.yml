@@ -36,6 +36,11 @@ jobs:
         run: |
           APP_PATH="$RUNNER_TEMP/DerivedData/Build/Products/Release-iphoneos/iSpend.app"
           test -d "$APP_PATH"
+          INFO_PLIST="$APP_PATH/Info.plist"
+          test "$(plutil -extract CFBundleShortVersionString raw -o - "$INFO_PLIST")" = "1.1.1"
+          test "$(plutil -extract CFBundleVersion raw -o - "$INFO_PLIST")" = "2"
+          test "$(plutil -extract UIRequiresFullScreen raw -o - "$INFO_PLIST")" = "true"
+          plutil -extract UILaunchScreen xml1 -o - "$INFO_PLIST" >/dev/null
           mkdir -p "$RUNNER_TEMP/Payload"
           cp -R "$APP_PATH" "$RUNNER_TEMP/Payload/iSpend.app"
           cd "$RUNNER_TEMP"
