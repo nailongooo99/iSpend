@@ -17,6 +17,7 @@ struct SettingsView: View {
     @Query private var ledgers: [Ledger]
     @Query private var accounts: [Account]
     @Query private var transactions: [FinanceTransaction]
+    @Query private var budgets: [Budget]
     @AppStorage("defaultLedgerID") private var defaultLedgerID = ""
     @AppStorage("defaultAccountID") private var defaultAccountID = ""
     @AppStorage("defaultCurrency") private var currency = "CNY"
@@ -29,6 +30,9 @@ struct SettingsView: View {
     @AppStorage("budgetNotifications") private var budgetNotifications = false
     @AppStorage("subscriptionNotifications") private var subscriptionNotifications = false
     @AppStorage("savingsNotifications") private var savingsNotifications = false
+    @AppStorage("liveActivityEnabled") private var liveActivityEnabled = false
+    @AppStorage("liveActivityPeriod") private var liveActivityPeriod = LiveActivityPeriod.today.rawValue
+    @AppStorage("liveActivityMetric") private var liveActivityMetric = LiveActivityMetric.expense.rawValue
     @State private var exportKind: ExportKind?
     @State private var exporting = false
     @State private var errorMessage: String?
@@ -51,6 +55,12 @@ struct SettingsView: View {
                 Toggle("预算提醒", isOn: $budgetNotifications).onChange(of: budgetNotifications) { requestNotificationsIfNeeded() }
                 Toggle("订阅提醒", isOn: $subscriptionNotifications).onChange(of: subscriptionNotifications) { requestNotificationsIfNeeded() }
                 Toggle("储蓄提醒", isOn: $savingsNotifications).onChange(of: savingsNotifications) { requestNotificationsIfNeeded() }
+            }
+            Section("灵动岛与实时活动") {
+                Toggle("启用实时活动状态", isOn: $liveActivityEnabled).onChange(of: liveActivityEnabled) { syncLiveActivity() }
+                Picker("收支总览周期", selection: $liveActivityPeriod) { ForEach(LiveActivityPeriod.allCases) { Text($0.title).tag($0.rawValue) } }.disabled(!liveActivityEnabled).onChange(of: liveActivityPeriod) { syncLiveActivity() }
+                Picker("主要显示数据", selection: $liveActivityMetric) { ForEach(LiveActivityMetric.allCases) { Label($0.title, systemImage: $0.symbolName).tag($0.rawValue) } }.disabled(!liveActivityEnabled).onChange(of: liveActivityMetric) { syncLiveActivity() }
+                Text("支持灵动岛的 iPhone 会显示紧凑与展开视图；其他支持设备可在锁屏查看。交易或预算变化时会自动更新。").font(.footnote).foregroundStyle(.secondary)
             }
             Section("数据") {
                 Button("导出 CSV", systemImage: "tablecells") { exportKind = .csv; exporting = true }
@@ -75,5 +85,16 @@ struct SettingsView: View {
     private func requestNotificationsIfNeeded() {
         guard budgetNotifications || subscriptionNotifications || savingsNotifications else { return }
         Task { do { _ = try await UNUserNotificationCenter.current().requestAuthorization(options: [.alert, .sound, .badge]) } catch { errorMessage = error.localizedDescription } }
+    }
+    private func syncLiveActivity() {
+        let enabled = liveActivityEnabled
+        let period = LiveActivityPeriod(rawValue: liveActivityPeriod) ?? .today
+        let metric = LiveActivityMetric(rawValue: liveActivityMetric) ?? .expense
+        Task {
+            if enabled {
+                do { try await LiveActivityService.sync(transactions: transactions, budgets: budgets, period: period, metric: metric, currencyCode: currency) }
+                catch { liveActivityEnabled = false; errorMessage = error.localizedDescription }
+            } else { await LiveActivityService.endAll() }
+        }
     }
 }

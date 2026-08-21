@@ -2,6 +2,27 @@
 
 本项目遵循 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/) 的结构，并采用语义化版本号。
 
+## [1.1.2] - 2026-08-21
+
+### 新增
+
+- 覆盖主要生活、家庭、学习、工作、出行和收入场景的详细预设二级分类。
+- 账单首页周、月、年和自定义日期范围筛选。
+- 支出、收入、收支及全部交易类型筛选。
+- ActivityKit Live Activity 与 Dynamic Island 财务总览。
+- 实时活动周期及支出、收入、结余、预算指标偏好。
+
+### 修复
+
+- 升级用户无法自动获得新预设分类的问题。
+- 账单删除确认、错误提示和报销保存的状态处理。
+
+### 优化
+
+- 交易与预算变化时自动更新实时活动。
+- CI 增加 Widget Extension 和实时活动产物验证。
+- 设置页增加实时活动说明与系统权限错误反馈。
+
 ## [1.1.1] - 2026-08-21
 
 ### 新增
@@ -30,5 +51,6 @@
 - iSpend 首个正式版本。
 - 账单、账户、预算、统计、储蓄目标、订阅、分期和数据导出。
 
+[1.1.2]: https://github.com/nailongooo99/iSpend/compare/v1.1.1...v1.1.2
 [1.1.1]: https://github.com/nailongooo99/iSpend/compare/v1.0.0...v1.1.1
 [1.0.0]: https://github.com/nailongooo99/iSpend/releases/tag/v1.0.0

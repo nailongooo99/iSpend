@@ -14,6 +14,8 @@ iSpend 是一款使用 Swift 6、SwiftUI 与 SwiftData 编写的原生 iOS 个�
 - Swift Charts 收支分类环形图与分类交易明细
 - 多账本、自定义分类、储蓄目标、订阅、自订周期与分期
 - 支持一级与二级分类，快速记账可按层级精确选择
+- 账单支持周、月、年、自定义时间范围及交易类型筛选
+- 支持 ActivityKit 实时活动与灵动岛收支总览
 - 订阅到期自动生成账单并避免同一周期重复生成
 - CSV/JSON 数据导出、深色模式、Dynamic Type 与基础 VoiceOver
 
