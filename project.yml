@@ -8,7 +8,7 @@ settings:
     SWIFT_VERSION: 6.0
     SWIFT_STRICT_CONCURRENCY: complete
     MARKETING_VERSION: 1.1.2
-    CURRENT_PROJECT_VERSION: 3
+    CURRENT_PROJECT_VERSION: 4
     DEVELOPMENT_TEAM: ""
     CODE_SIGNING_ALLOWED: NO
     CODE_SIGNING_REQUIRED: NO
@@ -44,11 +44,10 @@ targets:
       - path: iSpend/Shared
     settings:
       PRODUCT_BUNDLE_IDENTIFIER: com.ispend.app.liveactivity
-      GENERATE_INFOPLIST_FILE: YES
+      GENERATE_INFOPLIST_FILE: NO
+      INFOPLIST_FILE: iSpendLiveActivity/Info.plist
       SKIP_INSTALL: YES
       APPLICATION_EXTENSION_API_ONLY: YES
-      INFOPLIST_KEY_CFBundleDisplayName: iSpend 财务总览
-      INFOPLIST_KEY_NSExtension_NSExtensionPointIdentifier: com.apple.widgetkit-extension
   iSpendTests:
     type: bundle.unit-test
     platform: iOS

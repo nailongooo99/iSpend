@@ -57,7 +57,7 @@ open iSpend.xcodeproj
 2. 以 `CODE_SIGNING_ALLOWED=NO` 构建真机 Release App；
 3. 打包并上传 `iSpend-unsigned-ipa` Artifact。
 
-未签名 IPA 不能直接安装到普通 iPhone，需要使用你自己的证书重新签名。它适合后续签名、侧载工具处理或产物检查。
+未签名 IPA 不能直接安装到普通 iPhone，需要使用你自己的证书重新签名。它适合后续签名、侧载工具处理或产物检查。由于 iSpend 包含实时活动 Widget Extension，签名工具必须同时重签主 App 和 `PlugIns/iSpendLiveActivity.appex`，并为两者生成匹配的描述文件；不支持嵌套扩展重签的工具仍会导致 iOS 拒绝安装。设备系统版本必须为 iOS 18 或更高版本。
 
 ## 数据与隐私
 

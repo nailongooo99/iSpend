@@ -38,11 +38,18 @@ jobs:
           test -d "$APP_PATH"
           INFO_PLIST="$APP_PATH/Info.plist"
           test "$(plutil -extract CFBundleShortVersionString raw -o - "$INFO_PLIST")" = "1.1.2"
-          test "$(plutil -extract CFBundleVersion raw -o - "$INFO_PLIST")" = "3"
+          test "$(plutil -extract CFBundleVersion raw -o - "$INFO_PLIST")" = "4"
           test "$(plutil -extract UIRequiresFullScreen raw -o - "$INFO_PLIST")" = "true"
           plutil -extract UILaunchScreen xml1 -o - "$INFO_PLIST" >/dev/null
           test "$(plutil -extract NSSupportsLiveActivities raw -o - "$INFO_PLIST")" = "true"
-          test -d "$APP_PATH/PlugIns/iSpendLiveActivity.appex"
+          EXTENSION_PATH="$APP_PATH/PlugIns/iSpendLiveActivity.appex"
+          EXTENSION_INFO="$EXTENSION_PATH/Info.plist"
+          test -d "$EXTENSION_PATH"
+          test -x "$EXTENSION_PATH/iSpendLiveActivity"
+          test "$(plutil -extract CFBundleIdentifier raw -o - "$EXTENSION_INFO")" = "com.ispend.app.liveactivity"
+          test "$(plutil -extract CFBundleShortVersionString raw -o - "$EXTENSION_INFO")" = "1.1.2"
+          test "$(plutil -extract CFBundleVersion raw -o - "$EXTENSION_INFO")" = "4"
+          test "$(plutil -extract NSExtension.NSExtensionPointIdentifier raw -o - "$EXTENSION_INFO")" = "com.apple.widgetkit-extension"
           mkdir -p "$RUNNER_TEMP/Payload"
           cp -R "$APP_PATH" "$RUNNER_TEMP/Payload/iSpend.app"
           cd "$RUNNER_TEMP"
@@ -58,8 +65,17 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          gh release create "$GITHUB_REF_NAME" \
-            "iSpend-unsigned.ipa#iSpend-${GITHUB_REF_NAME}-unsigned.ipa" \
-            --title "iSpend ${GITHUB_REF_NAME#v}" \
-            --notes-file RELEASE_NOTES.md \
-            --verify-tag
+          if gh release view "$GITHUB_REF_NAME" >/dev/null 2>&1; then
+            gh release edit "$GITHUB_REF_NAME" \
+              --title "iSpend ${GITHUB_REF_NAME#v}" \
+              --notes-file RELEASE_NOTES.md
+            gh release upload "$GITHUB_REF_NAME" \
+              "iSpend-unsigned.ipa#iSpend-${GITHUB_REF_NAME}-unsigned.ipa" \
+              --clobber
+          else
+            gh release create "$GITHUB_REF_NAME" \
+              "iSpend-unsigned.ipa#iSpend-${GITHUB_REF_NAME}-unsigned.ipa" \
+              --title "iSpend ${GITHUB_REF_NAME#v}" \
+              --notes-file RELEASE_NOTES.md \
+              --verify-tag
+          fi
