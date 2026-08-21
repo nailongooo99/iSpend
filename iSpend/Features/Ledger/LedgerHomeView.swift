@@ -140,7 +140,11 @@ struct LedgerHomeView: View {
 
     @ToolbarContentBuilder private var ledgerToolbar: some ToolbarContent {
         ToolbarItem(placement: .topBarTrailing) {
-            NavigationLink("更多功能", systemImage: "ellipsis.circle") { FeatureMenuView() }
+            NavigationLink {
+                FeatureMenuView()
+            } label: {
+                Label("更多功能", systemImage: "ellipsis.circle")
+            }
                 .labelStyle(.iconOnly)
         }
     }
