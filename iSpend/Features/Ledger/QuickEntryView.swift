@@ -12,6 +12,7 @@ struct QuickEntryView: View {
     @State private var type = TransactionType.expense
     @State private var expression = ""
     @State private var selectedCategory: FinanceCategory?
+    @State private var selectedParentName: String?
     @State private var ledger: Ledger?
     @State private var source: Account?
     @State private var destination: Account?
@@ -27,7 +28,7 @@ struct QuickEntryView: View {
         NavigationStack {
             ScrollView {
                 VStack(spacing: 18) {
-                    Picker("交易类型", selection: $type) { ForEach(TransactionType.allCases) { Text($0.title).tag($0) } }.pickerStyle(.segmented).onChange(of: type) { selectedCategory = nil }
+                    Picker("交易类型", selection: $type) { ForEach(TransactionType.allCases) { Text($0.title).tag($0) } }.pickerStyle(.segmented).onChange(of: type) { selectedCategory = nil; selectedParentName = nil }
                     if type == .transfer { transferAccounts } else { categoryGrid }
                     quickTags
                     VStack(spacing: 10) { Text(displayAmount).font(.system(.largeTitle, design: .rounded, weight: .bold)).monospacedDigit().foregroundStyle(type == .income ? .green : type == .transfer ? .blue : selectedCategory.map { Color(hex: $0.colorHex) } ?? .primary); HStack { DatePicker("时间", selection: $date).labelsHidden(); TextField("点击填写备注", text: $note).multilineTextAlignment(.trailing) } }.padding().background(Color(.secondarySystemBackground), in: RoundedRectangle(cornerRadius: 20))
@@ -43,7 +44,29 @@ struct QuickEntryView: View {
         }.presentationDetents([.large])
     }
     private var availableCategories: [FinanceCategory] { categories.filter { $0.isEnabled && $0.type == (type == .income ? .income : .expense) } }
-    private var categoryGrid: some View { LazyVGrid(columns: Array(repeating: GridItem(.flexible()), count: 5), spacing: 14) { ForEach(availableCategories) { category in Button { selectedCategory = category } label: { VStack(spacing: 6) { CategoryIcon(category: category, size: 44).overlay { if selectedCategory?.id == category.id { Circle().stroke(Color(hex: category.colorHex), lineWidth: 2) } }; Text(category.name).font(.caption2).foregroundStyle(.primary).lineLimit(1) } }.buttonStyle(.plain).accessibilityLabel("分类：\(category.name)") } } }
+    private var rootCategories: [FinanceCategory] { availableCategories.filter { !$0.isSubcategory } }
+    private var visibleChildren: [FinanceCategory] { guard let selectedParentName else { return [] }; return availableCategories.filter { $0.parentName == selectedParentName } }
+    private var categoryGrid: some View {
+        VStack(alignment: .leading, spacing: 14) {
+            LazyVGrid(columns: Array(repeating: GridItem(.flexible()), count: 5), spacing: 14) {
+                ForEach(rootCategories) { category in
+                    Button { selectedParentName = category.name; selectedCategory = category } label: {
+                        VStack(spacing: 6) { CategoryIcon(category: category, size: 44).overlay { if selectedParentName == category.name { Circle().stroke(Color(hex: category.colorHex), lineWidth: 2) } }; Text(category.displayName).font(.caption).foregroundStyle(.primary).lineLimit(1) }
+                    }.buttonStyle(.plain).accessibilityLabel("一级分类：\(category.displayName)")
+                }
+            }
+            if !visibleChildren.isEmpty {
+                Text("选择二级分类").font(.subheadline).foregroundStyle(.secondary)
+                LazyVGrid(columns: Array(repeating: GridItem(.flexible()), count: 4), spacing: 10) {
+                    ForEach(visibleChildren) { category in
+                        Button { selectedCategory = category } label: {
+                            Label(category.displayName, systemImage: category.symbolName).font(.subheadline).lineLimit(1).frame(maxWidth: .infinity, minHeight: 44).background(selectedCategory?.id == category.id ? Color(hex: category.colorHex).opacity(0.18) : Color(.secondarySystemBackground), in: RoundedRectangle(cornerRadius: 12))
+                        }.buttonStyle(.plain).accessibilityLabel("二级分类：\(category.displayName)")
+                    }
+                }
+            }
+        }
+    }
     private var transferAccounts: some View { VStack { Picker("转出账户", selection: $source) { ForEach(accounts) { Text($0.name).tag(Optional($0)) } }; Picker("转入账户", selection: $destination) { ForEach(accounts) { Text($0.name).tag(Optional($0)) } } }.pickerStyle(.menu).padding().background(Color(.secondarySystemBackground), in: RoundedRectangle(cornerRadius: 16)) }
     private var quickTags: some View { ScrollView(.horizontal) { HStack { Menu { ForEach(accounts) { account in Button(account.name) { if type == .income { destination = account } else { source = account } } } } label: { Label((type == .income ? destination : source)?.name ?? "账户", systemImage: "wallet.bifold") }; Button { reimbursable.toggle() } label: { Label("报销", systemImage: reimbursable ? "checkmark.circle.fill" : "circle") }; PhotosPicker("图片", selection: $photoItem, matching: .images).accessibilityLabel(receiptData == nil ? "添加账单图片" : "更换账单图片") }.buttonStyle(.bordered) }.scrollIndicators(.hidden) }
     private var displayAmount: String { CurrencyFormatter.string(KeypadCalculator.evaluate(expression) ?? 0, currency: ledger?.currency ?? "CNY") }

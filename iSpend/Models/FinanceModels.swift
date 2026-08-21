@@ -39,6 +39,7 @@ enum RecurringKind: String, Codable, CaseIterable, Identifiable { case subscript
 }
 
 @Model final class FinanceCategory {
+    static var hierarchySeparator: Character { "/" }
     var id: UUID
     var name: String
     var symbolName: String
@@ -51,6 +52,19 @@ enum RecurringKind: String, Codable, CaseIterable, Identifiable { case subscript
         id = UUID(); self.name = name; self.symbolName = symbolName; self.colorHex = colorHex; typeRaw = type.rawValue; self.sortOrder = sortOrder; self.isEnabled = isEnabled; transactions = []
     }
     var type: CategoryType { CategoryType(rawValue: typeRaw) ?? .expense }
+    var parentName: String? {
+        let parts = name.split(separator: Self.hierarchySeparator, maxSplits: 1).map(String.init)
+        return parts.count == 2 ? parts[0] : nil
+    }
+    var displayName: String {
+        name.split(separator: Self.hierarchySeparator, maxSplits: 1).last.map(String.init) ?? name
+    }
+    var pathDisplayName: String { name.replacing("/", with: " › ") }
+    var isSubcategory: Bool { parentName != nil }
+    static func storageName(_ displayName: String, parentName: String?) -> String {
+        guard let parentName, !parentName.isEmpty else { return displayName }
+        return parentName + String(hierarchySeparator) + displayName
+    }
 }
 
 @Model final class Account {

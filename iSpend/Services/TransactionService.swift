@@ -4,8 +4,8 @@ import SwiftData
 @MainActor
 enum TransactionService {
     enum ServiceError: LocalizedError {
-        case invalidAmount, missingLedger, missingAccount, sameTransferAccount, saveFailed
-        var errorDescription: String? { switch self { case .invalidAmount: "金额必须大于 0"; case .missingLedger: "请选择账本"; case .missingAccount: "请选择账户"; case .sameTransferAccount: "转入和转出账户不能相同"; case .saveFailed: "数据保存失败，请稍后重试" } }
+        case invalidAmount, missingLedger, missingCategory, missingAccount, sameTransferAccount, saveFailed
+        var errorDescription: String? { switch self { case .invalidAmount: "金额必须大于 0"; case .missingLedger: "请选择账本"; case .missingCategory: "请选择分类"; case .missingAccount: "请选择账户"; case .sameTransferAccount: "转入和转出账户不能相同"; case .saveFailed: "数据保存失败，请稍后重试" } }
     }
 
     struct Draft {
@@ -35,8 +35,12 @@ enum TransactionService {
         guard draft.amount > 0 else { throw ServiceError.invalidAmount }
         guard draft.ledger != nil else { throw ServiceError.missingLedger }
         switch draft.type {
-        case .expense: guard draft.source != nil else { throw ServiceError.missingAccount }
-        case .income: guard draft.destination != nil else { throw ServiceError.missingAccount }
+        case .expense:
+            guard draft.category != nil else { throw ServiceError.missingCategory }
+            guard draft.source != nil else { throw ServiceError.missingAccount }
+        case .income:
+            guard draft.category != nil else { throw ServiceError.missingCategory }
+            guard draft.destination != nil else { throw ServiceError.missingAccount }
         case .transfer:
             guard let source = draft.source, let destination = draft.destination else { throw ServiceError.missingAccount }
             guard source.id != destination.id else { throw ServiceError.sameTransferAccount }

@@ -37,7 +37,7 @@ struct TransactionRow: View {
     var body: some View {
         HStack(spacing: 12) {
             CategoryIcon(category: transaction.category)
-            VStack(alignment: .leading, spacing: 4) { Text(transaction.category?.name ?? "转账").font(.headline); Text(subtitle).font(.caption).foregroundStyle(.secondary).lineLimit(1); if transaction.isReimbursable { Label(transaction.isReimbursed ? "已报销" : "待报销", systemImage: "doc.text").font(.caption2).foregroundStyle(.tint) } }
+            VStack(alignment: .leading, spacing: 4) { Text(transaction.category?.displayName ?? "转账").font(.headline); if let parent = transaction.category?.parentName { Text(parent).font(.caption).foregroundStyle(.secondary) }; Text(subtitle).font(.caption).foregroundStyle(.secondary).lineLimit(1); if transaction.isReimbursable { Label(transaction.isReimbursed ? "已报销" : "待报销", systemImage: "doc.text").font(.caption).foregroundStyle(.tint) } }
             Spacer(); VStack(alignment: .trailing, spacing: 4) { AmountText(amount: transaction.amount, currency: transaction.currency, type: transaction.type); Text(accountName).font(.caption).foregroundStyle(.secondary) }
         }.padding(.vertical, 4).accessibilityElement(children: .combine)
     }
