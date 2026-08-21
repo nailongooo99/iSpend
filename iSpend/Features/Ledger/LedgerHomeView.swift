@@ -33,43 +33,137 @@ struct LedgerHomeView: View {
 
     var body: some View {
         NavigationStack {
-            List {
-                Section("查看范围") {
-                    ledgerPicker
-                    Picker("时间范围", selection: $range) { ForEach(LedgerRange.allCases) { Text($0.title).tag($0) } }.pickerStyle(.segmented)
-                    periodSelector
-                    Picker("数据类型", selection: $dataFilter) { ForEach(LedgerDataFilter.allCases) { Text($0.title).tag($0) } }.pickerStyle(.menu)
-                    Button("收支日历", systemImage: "calendar") { sheet = .calendar }
-                }
-                Section { SummaryCard(expense: periodExpense, income: periodIncome, currency: currentLedger?.currency ?? "CNY").listRowInsets(.init()).listRowBackground(Color.clear) }
-                if transactions.isEmpty {
-                    ContentUnavailableView("没有符合条件的账单", systemImage: "line.3.horizontal.decrease.circle", description: Text("可调整时间范围或数据类型筛选"))
-                    Button("开始记账") { sheet = .add }.frame(maxWidth: .infinity)
-                }
-                ForEach(groupedDates, id: \.self) { day in
-                    Section {
-                        ForEach(transactions.filter { Calendar.current.isDate($0.date, inSameDayAs: day) }) { item in
-                            NavigationLink { TransactionDetailView(transaction: item) } label: { TransactionRow(transaction: item) }
-                                .swipeActions(edge: .trailing) { Button("删除", systemImage: "trash", role: .destructive) { deleteTarget = item }; Button("编辑", systemImage: "pencil") { selectedTransaction = item }.tint(.orange) }
-                                .contextMenu { Button("复制交易", systemImage: "doc.on.doc") { duplicate(item) }; Button(item.isReimbursable ? "取消报销标记" : "标记报销", systemImage: "doc.text") { item.isReimbursable.toggle(); saveContext() } }
-                        }
-                    } header: { DayHeader(day: day, transactions: transactions) }
-                }
-            }
-            .listStyle(.insetGrouped).navigationTitle("账单")
-            .toolbar { ToolbarItem(placement: .topBarTrailing) { NavigationLink("更多功能", systemImage: "ellipsis.circle") { FeatureMenuView() }.labelStyle(.iconOnly) } }
-            .overlay(alignment: .bottomTrailing) { Button("新增交易", systemImage: "plus") { sheet = .add }.labelStyle(.iconOnly).font(.title2.bold()).foregroundStyle(.white).frame(width: 58, height: 58).background(.tint, in: Circle()).shadow(color: .black.opacity(0.15), radius: 8, y: 4).padding(20) }
-            .sheet(item: $sheet) { destination in
-                switch destination {
-                case .add: QuickEntryView(preselectedLedger: currentLedger)
-                case .calendar: CashflowCalendarView(transactions: periodTransactions, month: anchorDate)
-                case .customRange: CustomDateRangeView(start: $customStart, end: $customEnd)
-                }
-            }
+            ledgerContent
+        }
+    }
+
+    private var ledgerContent: some View {
+        ledgerList
+            .listStyle(.insetGrouped)
+            .navigationTitle("账单")
+            .toolbar { ledgerToolbar }
+            .overlay(alignment: .bottomTrailing) { addButton }
+            .sheet(item: $sheet, content: sheetContent)
             .sheet(item: $selectedTransaction) { TransactionEditorView(transaction: $0) }
-            .confirmationDialog("删除这笔交易？", isPresented: deletePresented, titleVisibility: .visible) { Button("删除", role: .destructive, action: deleteSelected); Button("取消", role: .cancel) { deleteTarget = nil } } message: { Text("账户余额将自动恢复。") }
-            .alert("操作失败", isPresented: errorPresented) { } message: { Text(errorMessage ?? "未知错误") }
-            .onChange(of: range) { if range == .custom { sheet = .customRange } }
+            .confirmationDialog("删除这笔交易？", isPresented: deletePresented, titleVisibility: .visible) {
+                Button("删除", role: .destructive, action: deleteSelected)
+                Button("取消", role: .cancel) { deleteTarget = nil }
+            } message: {
+                Text("账户余额将自动恢复。")
+            }
+            .alert("操作失败", isPresented: errorPresented) { } message: {
+                Text(errorMessage ?? "未知错误")
+            }
+            .onChange(of: range) {
+                if range == .custom { sheet = .customRange }
+            }
+    }
+
+    private var ledgerList: some View {
+        List {
+            filterSection
+            Section {
+                SummaryCard(
+                    expense: periodExpense,
+                    income: periodIncome,
+                    currency: currentLedger?.currency ?? "CNY"
+                )
+                .listRowInsets(.init())
+                .listRowBackground(Color.clear)
+            }
+            if transactions.isEmpty { emptyState }
+            transactionSections
+        }
+    }
+
+    private var filterSection: some View {
+        Section("查看范围") {
+            ledgerPicker
+            Picker("时间范围", selection: $range) {
+                ForEach(LedgerRange.allCases) { Text($0.title).tag($0) }
+            }
+            .pickerStyle(.segmented)
+            periodSelector
+            Picker("数据类型", selection: $dataFilter) {
+                ForEach(LedgerDataFilter.allCases) { Text($0.title).tag($0) }
+            }
+            .pickerStyle(.menu)
+            Button("收支日历", systemImage: "calendar") { sheet = .calendar }
+        }
+    }
+
+    @ViewBuilder private var emptyState: some View {
+        ContentUnavailableView(
+            "没有符合条件的账单",
+            systemImage: "line.3.horizontal.decrease.circle",
+            description: Text("可调整时间范围或数据类型筛选")
+        )
+        Button("开始记账") { sheet = .add }
+            .frame(maxWidth: .infinity)
+    }
+
+    private var transactionSections: some View {
+        ForEach(groupedDates, id: \.self) { day in
+            Section {
+                ForEach(transactionsForDay(day)) { item in
+                    transactionLink(item)
+                }
+            } header: {
+                DayHeader(day: day, transactions: transactions)
+            }
+        }
+    }
+
+    private func transactionsForDay(_ day: Date) -> [FinanceTransaction] {
+        transactions.filter { Calendar.current.isDate($0.date, inSameDayAs: day) }
+    }
+
+    private func transactionLink(_ item: FinanceTransaction) -> some View {
+        NavigationLink {
+            TransactionDetailView(transaction: item)
+        } label: {
+            TransactionRow(transaction: item)
+        }
+        .swipeActions(edge: .trailing) {
+            Button("删除", systemImage: "trash", role: .destructive) { deleteTarget = item }
+            Button("编辑", systemImage: "pencil") { selectedTransaction = item }
+                .tint(.orange)
+        }
+        .contextMenu {
+            Button("复制交易", systemImage: "doc.on.doc") { duplicate(item) }
+            Button(item.isReimbursable ? "取消报销标记" : "标记报销", systemImage: "doc.text") {
+                item.isReimbursable.toggle()
+                saveContext()
+            }
+        }
+    }
+
+    @ToolbarContentBuilder private var ledgerToolbar: some ToolbarContent {
+        ToolbarItem(placement: .topBarTrailing) {
+            NavigationLink("更多功能", systemImage: "ellipsis.circle") { FeatureMenuView() }
+                .labelStyle(.iconOnly)
+        }
+    }
+
+    private var addButton: some View {
+        Button("新增交易", systemImage: "plus") { sheet = .add }
+            .labelStyle(.iconOnly)
+            .font(.title2.bold())
+            .foregroundStyle(.white)
+            .frame(width: 58, height: 58)
+            .background(.tint, in: Circle())
+            .shadow(color: .black.opacity(0.15), radius: 8, y: 4)
+            .padding(20)
+    }
+
+    @ViewBuilder private func sheetContent(_ destination: LedgerSheet) -> some View {
+        switch destination {
+        case .add:
+            QuickEntryView(preselectedLedger: currentLedger)
+        case .calendar:
+            CashflowCalendarView(transactions: periodTransactions, month: anchorDate)
+        case .customRange:
+            CustomDateRangeView(start: $customStart, end: $customEnd)
         }
     }
 
